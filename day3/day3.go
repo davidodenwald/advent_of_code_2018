@@ -26,7 +26,7 @@ func main() {
 	}
 	lines := strings.Split(string(file), "\n")
 
-	// part1(lines)
+	part1(lines)
 	part2(lines)
 }
 
