@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"strings"
 )
 
 const filename = "input.txt"
@@ -42,6 +41,15 @@ func part1(poly string) {
 	fmt.Println(len(poly))
 }
 
+func removeBytes(s string, b byte) string {
+	for i := 0; i < len(s)-2; i++ {
+		if s[i] == b {
+			s = s[:i] + s[i+2:]
+		}
+	}
+	return s
+}
+
 func part2(poly string) {
 	chars := make(map[byte]bool)
 
@@ -56,8 +64,8 @@ func part2(poly string) {
 	var newPoly string
 	min := 1<<63 - 1
 	for char := range chars {
-		newPoly = strings.Replace(poly, strings.ToUpper(string(char)), "", -1)
-		newPoly = strings.Replace(newPoly, string(char), "", -1)
+		newPoly = removeBytes(poly, char)
+		newPoly = removeBytes(poly, char-32)
 		curLen := len(collapsePoly(newPoly))
 		if curLen < min {
 			min = curLen
