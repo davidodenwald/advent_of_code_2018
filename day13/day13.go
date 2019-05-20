@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	filename = "example.txt"
+	filename = "input.txt"
 
 	horizontal = 45  // -
 	vertical   = 124 // |
@@ -34,10 +34,11 @@ type cart struct {
 	Y        int
 	Dir      direction
 	CrossDir int
+	Crashed  bool
 }
 
 func newCart(x, y int, dir direction) *cart {
-	return &cart{X: x, Y: y, Dir: dir, CrossDir: 0}
+	return &cart{X: x, Y: y, Dir: dir}
 }
 
 func main() {
@@ -47,16 +48,26 @@ func main() {
 	}
 	tracks, carts := parseInput(file)
 
-	crashed := false
-	for !crashed {
+	for len(carts) > 1 {
 		sort.Slice(carts, func(i, k int) bool {
 			if carts[i].Y != carts[k].Y {
 				return carts[i].Y < carts[k].Y
 			}
 			return carts[i].X < carts[k].X
 		})
+
 		for i := range carts {
-			fmt.Printf("<%d,%d>\n", carts[i].X, carts[i].Y)
+			switch carts[i].Dir {
+			case up:
+				carts[i].Y--
+			case down:
+				carts[i].Y++
+			case left:
+				carts[i].X--
+			case right:
+				carts[i].X++
+			}
+
 			switch tracks[carts[i].Y][carts[i].X] {
 			case curveL:
 				switch carts[i].Dir {
@@ -81,37 +92,29 @@ func main() {
 					carts[i].Dir = up
 				}
 			case cross:
-				carts[i].Dir = abs((carts[i].Dir + direction((carts[i].CrossDir%3)-1)) % 4)
-				carts[i].CrossDir++
+				carts[i].Dir = mod(carts[i].Dir+direction(carts[i].CrossDir-1), 4)
+				carts[i].CrossDir = (carts[i].CrossDir + 1) % 3
 			}
 
-			switch carts[i].Dir {
-			case up:
-				carts[i].Y--
-			case down:
-				carts[i].Y++
-			case left:
-				carts[i].X--
-			case right:
-				carts[i].X++
-			}
-
-			// printTracks(tracks, carts)
-
-			for _, aCart := range carts {
-				for _, bCart := range carts {
-					if aCart == bCart {
+			for ic, c := range carts {
+				if carts[i].X == c.X && carts[i].Y == c.Y {
+					if ic == i {
 						continue
 					}
-					if aCart.X == bCart.X && aCart.Y == bCart.Y {
-						fmt.Printf("%d,%d\n", aCart.X, aCart.Y)
-						crashed = true
-					}
+					fmt.Printf("Crash: %d,%d\n", c.X, c.Y)
+					carts[i].Crashed = true
+					carts[ic].Crashed = true
+					break
 				}
 			}
 		}
-		crashed = true
+		for i := len(carts) - 1; i >= 0; i-- {
+			if carts[i].Crashed {
+				carts = append(carts[:i], carts[i+1:]...)
+			}
+		}
 	}
+	fmt.Printf("%d,%d\n", carts[0].X, carts[0].Y)
 }
 
 func parseInput(input []byte) ([][]byte, []cart) {
@@ -137,9 +140,12 @@ func parseInput(input []byte) ([][]byte, []cart) {
 	return tracks, carts
 }
 
-func abs(n direction) direction {
-	y := n >> 63
-	return (n ^ y) - y
+func mod(d direction, m int) direction {
+	res := d % direction(m)
+	if (res < 0 && m > 0) || (res > 0 && m < 0) {
+		return res + direction(m)
+	}
+	return res
 }
 
 func isCart(b byte) (bool, direction) {
