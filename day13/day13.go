@@ -11,11 +11,9 @@ import (
 const (
 	filename = "input.txt"
 
-	horizontal = 45  // -
-	vertical   = 124 // |
-	curveL     = 92  // \
-	curveR     = 47  // /
-	cross      = 43  // +
+	curveL = 92 // \
+	curveR = 47 // /
+	cross  = 43 // +
 
 	cartDisp = "^>v<"
 )
